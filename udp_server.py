@@ -1,4 +1,5 @@
 import socket
+import json
 
 def start(address: str, port: int): 
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # criar socket
@@ -10,3 +11,6 @@ def start(address: str, port: int):
     print(mensagem[0].decode()) # 0 - array de bytes que contém a mensagem
     print(mensagem[1]) # 1 - tuplo, endereço-porta do agente
 
+    with open("agent63.json", "r") as file_json: # with garante que há um close do open
+        data = json.load(file_json)
+        print(data)
