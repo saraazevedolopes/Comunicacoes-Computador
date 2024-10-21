@@ -1,0 +1,34 @@
+{
+  "task-202": {
+        "frequency": 20,
+        "device_metrics": [true,true,["eth0"]],
+        "link_metrics": {
+            "bandwidth": true,
+            "jitter": true,
+            "loss": false,
+            "latency": true
+        },
+        "alertflow_conditions": {
+            "cpu_usage": 80,
+            "ram_usage": 90,
+            "packet_loss": 5,
+            "latency": 100
+        }
+  },
+  "task-430": {
+        "frequency": 40,
+        "device_metrics": [false,true,["eth1"]],
+        "link_metrics": {
+            "bandwidth": false,
+            "jitter": false,
+            "loss": false,
+            "latency": true
+        },
+        "alertflow_conditions": {
+            "cpu_usage": 0,
+            "ram_usage": 0,
+            "packet_loss": 7,
+            "latency": 200
+        }
+  }
+}
