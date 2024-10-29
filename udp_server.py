@@ -54,4 +54,4 @@ def start(address: str, port: int):
         print("recebi uma mensagem UDP!")
         threading.Thread(target=process, args=(message, s)).start()
 
-    s.close()
+    s.close() # ya
