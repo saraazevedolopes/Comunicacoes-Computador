@@ -1,5 +1,7 @@
 {
   "task-202": {
+        "command": "ping",
+        "parameters": "10.0.0.1 10", 
         "frequency": 20,
         "device_metrics": [true,true,["eth0"]],
         "link_metrics": {
@@ -16,6 +18,8 @@
         }
   },
   "task-430": {
+        "command": "iperf",
+        "parameters": "client 10.0.0.1 1 udp",
         "frequency": 40,
         "device_metrics": [false,true,["eth1"]],
         "link_metrics": {
