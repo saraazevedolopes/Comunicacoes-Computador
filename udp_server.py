@@ -1,6 +1,6 @@
 import socket
 import json
-import pickle # pega numa estrutura de dados e passa para bytes e vice-versa
+import struct # pega numa estrutura de dados e passa para bytes e vice-versa
 import parser
 from Shared import Shared
 import threading
@@ -16,16 +16,28 @@ import threading
 #métricas de link
 #condições do AlertFlow
 
+# Formato do cabeçalho do protocolo UDP 
+# "server", seq, ack, task_name, task_contents 
+# string de 6 bytes, short int de 2 bytes, short int de 2 bytes, string de 15 bytes, string de 25 bytes
+HEADER_FORMAT = "6s H H 15s 25s"
+
 # envia uma tarefa serializada em bytes para um agente especificado através do socket UDP
 def send(agent_name : str, address : tuple, shared : Shared, task_name : str, task_contents : dict, s : socket.socket):
     seq : int = shared.get_seq()
     ack : int = shared.get_ack()
 
-    header : list = ["server", seq, ack, task_name, task_contents] # cabeçalho
-
-    message = pickle.dumps(header) # transformar em bytes
+    # ???? default ?????
+    server_str = "server".encode('ascii').ljust(6, b'\x00')  # 6 bytes com padding de zero
     
-    s.sendto(message, address)
+    # Convertendo nome e conteúdo da tarefa para bytes, limitando o tamanho e preenchendo com zero 
+    task_name_bytes = task_name.encode('ascii')[:15].ljust(15, b'\x00') 
+    task_contents_str = json.dumps(task_contents)[:25]
+    task_contents_bytes = task_contents_str.encode('ascii').ljust(25, b'\x00')
+    
+    header = struct.pack(HEADER_FORMAT, server_str, seq, ack, task_name_bytes, task_contents_bytes)
+    
+    # Enviar mensagem pelo socket UDP
+    s.sendto(header, address)
 
 
 # recebe uma mensagem UDP, extrai o nome do agente e endereço, e inicia threads para enviar tarefas ao agente
