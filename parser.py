@@ -2,7 +2,7 @@ import struct
 import json
 
 
-HEADER_FORMAT = "6s H H 15s 25s"
+HEADER_FORMAT = "6s H H 15s 500s"
 
 def parse(message: bytes):
     # Desempacota a mensagem usando o HEADER_FORMAT

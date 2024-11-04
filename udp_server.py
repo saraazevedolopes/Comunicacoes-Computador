@@ -19,7 +19,7 @@ import threading
 # Formato do cabeçalho do protocolo UDP 
 # "server", seq, ack, task_name, task_contents 
 # string de 6 bytes, short int de 2 bytes, short int de 2 bytes, string de 15 bytes, string de 25 bytes
-HEADER_FORMAT = "6s H H 15s 25s"
+HEADER_FORMAT = "6s H H 15s 500s"
 
 # envia uma tarefa serializada em bytes para um agente especificado através do socket UDP
 def send(agent_name : str, address : tuple, shared : Shared, task_name : str, task_contents : dict, s : socket.socket):
@@ -31,11 +31,11 @@ def send(agent_name : str, address : tuple, shared : Shared, task_name : str, ta
     
     # Convertendo nome e conteúdo da tarefa para bytes, limitando o tamanho e preenchendo com zero 
     task_name_bytes = task_name.encode('ascii')[:15].ljust(15, b'\x00') 
-    task_contents_str = json.dumps(task_contents)[:25]
-    task_contents_bytes = task_contents_str.encode('ascii').ljust(25, b'\x00')
+    task_contents_str = json.dumps(task_contents)[:500]
+    task_contents_bytes = task_contents_str.encode('ascii').ljust(500, b'\x00')
     
     header = struct.pack(HEADER_FORMAT, server_str, seq, ack, task_name_bytes, task_contents_bytes)
-    
+    print("task", task_contents_str)
     # Enviar mensagem pelo socket UDP
     s.sendto(header, address)
 
