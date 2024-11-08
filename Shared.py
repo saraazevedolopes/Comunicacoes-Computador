@@ -1,11 +1,13 @@
 import threading
 
 class Shared:
-    def __init__(self, agent_name : str):
-        self.agent_name=agent_name
+    def __init__(self):
         self.seq = 0
         self.ack = 0
         self.lock = threading.RLock()
+
+    def print(self):
+        print(f"Dados deste agente: seq={self.seq}, ack={self.ack}")
 
     def get_seq(self) -> int:
         try:

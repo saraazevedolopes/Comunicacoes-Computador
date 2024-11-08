@@ -1,61 +1,45 @@
 import socket
 import json
-import struct # pega numa estrutura de dados e passa para bytes e vice-versa
 import parser
 from Shared import Shared
 import threading
 
-#campos do cabeçalho:
-#ID
-#número de sequência (server)
-#ACK (número de sequência que confirmamos do agente)
-#nome da tarefa
-#parâmetros do comando
-#frequência
-#métricas do dispositivo
-#métricas de link
-#condições do AlertFlow
-
-# Formato do cabeçalho do protocolo UDP 
-# "server", seq, ack, task_name, task_contents 
-# string de 6 bytes, short int de 2 bytes, short int de 2 bytes, string de 15 bytes, string de 25 bytes
-HEADER_FORMAT = "6s H H 15s 500s"
-
 # envia uma tarefa serializada em bytes para um agente especificado através do socket UDP
-def send(agent_name : str, address : tuple, shared : Shared, task_name : str, task_contents : dict, s : socket.socket):
-    seq : int = shared.get_seq()
-    ack : int = shared.get_ack()
+def send(s : socket.socket, address : tuple, agent_id : int, message_type : int, *args): #args é uma lista de 0 ou mais elementos, ack -> lista sem elementos, envio task -> n elementos
+    #transformar isto em lista para termos a possibilidade de ter um número variável de campos
+    agent_id = bin(agent_id)[2:].zfill(5)
+    message_type = bin(message_type)[2:].zfill(3)
 
-    # ???? default ?????
-    server_str = "server".encode('ascii').ljust(6, b'\x00')  # 6 bytes com padding de zero
+    message = agent_id + message_type 
     
-    # Convertendo nome e conteúdo da tarefa para bytes, limitando o tamanho e preenchendo com zero 
-    task_name_bytes = task_name.encode('ascii')[:15].ljust(15, b'\x00') 
-    task_contents_str = json.dumps(task_contents)[:500]
-    task_contents_bytes = task_contents_str.encode('ascii').ljust(500, b'\x00')
-    
-    header = struct.pack(HEADER_FORMAT, server_str, seq, ack, task_name_bytes, task_contents_bytes)
-    print("task", task_contents_str)
+    message_bytes = int(message, 2).to_bytes(len(message) // 8, byteorder='big')
     # Enviar mensagem pelo socket UDP
-    s.sendto(header, address)
+    s.sendto(message_bytes, address)
 
 
-# recebe uma mensagem UDP, extrai o nome do agente e endereço, e inicia threads para enviar tarefas ao agente
-def process(message : tuple, s : socket.socket):
-    #TODO: validar registo
-    print(message[0].decode()) # 0 - array de bytes que contém a mensagem
-    print(message[1]) # 1 - tuplo, endereço-porta do agente
+# recebe uma mensagem UDP, extrai os campos
+def process(message : tuple, s : socket.socket, agent_list : dict): # mensagem ser um array é funcionamennto básico do socket
+    fields : list = parser.parse(message[0]) # [agent_id, message_type, seq]
 
-    shared : Shared = Shared(message[0]) 
-
-    agent_name : str = message[0].decode()
+    print(fields)
+    if fields[1] == 0:
+        print(f"registo recebido do agente {fields[0]}")
+        agent_list[fields[0]] = Shared() # cria um objeto partilhado
+        send(s, message[1], fields[0], 1) # envia ack de volta (message type 1)
+    else:
+        print("não é registo")
+        
+        
     address : tuple = message[1]
-    tasks : dict = parser.parse_tasks(agent_name)
+    #tasks : dict = parser.parse_tasks(agent_name)
 
-    for key,value in tasks.items():
-        threading.Thread(target=send, args=(agent_name,address,shared,key,value,s)).start() # cria threads para cada task
+    #for key, value in tasks.items():
+    #    threading.Thread(target=send, args=(agent_name, address, shared, key, value, s)).start()
+
 
 def start(address: str, port: int): 
+    agent_list : dict = dict()
+
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # criar socket
     #AF_INET diz que é ipv4
     #SOCK_DGRAM diz que é UDP
@@ -64,6 +48,6 @@ def start(address: str, port: int):
     while True:  
         message = s.recvfrom(1024) # buffer de 1024 bytes para receber mensagem (array de bytes)
         print("recebi uma mensagem UDP!")
-        threading.Thread(target=process, args=(message, s)).start()
+        threading.Thread(target=process, args=(message, s, agent_list)).start()
 
-    s.close() # ya
+    s.close() 
