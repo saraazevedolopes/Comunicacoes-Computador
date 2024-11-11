@@ -7,7 +7,7 @@ def start(address: str, port: int):
     s.bind((address, port)) # associamos o socket a um par endereço-porta, podia ser a mesma porta
 
     s.listen(5) # ficar à escuta de pedidos de ligação (SYN), 5 - número de falhas até rejeitar a ligação, proteger de DDOS
-    print("succeeded in opening")
+    print("Sucesso no bind, TCP")
     
     while True: 
         connection, agent_address = s.accept() # quando aceito uma ligação de um endereço, agent_address, recebo um socket (socket dentro de um socket para comunicação) 

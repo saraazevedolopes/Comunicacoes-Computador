@@ -1,33 +1,30 @@
-import struct
 import json
 
 
-HEADER_FORMAT = "6s H H 15s 500s"
-
+# Retorna os dados como uma lista
 def parse(message: bytes):
-    # Desempacota a mensagem usando o HEADER_FORMAT
-    unpacked_data = struct.unpack(HEADER_FORMAT, message)
+    fields : list = []
+    bits = ''.join(f'{byte:08b}' for byte in message) # converte bytes para bits
+    print(bits)
+
+    # Extrai partes específicas da mensagem
+    fields.append(int(bits[:5], 2))            # Primeiros 5 bits para o ID do agente
+    fields.append(int(bits[5:8], 2))           # Próximos 3 bits para o tipo de mensagem
     
-    # Extrai e converte cada campo para o tipo correto
-    server_str = unpacked_data[0].decode('ascii').rstrip('\x00')
-    seq = unpacked_data[1]
-    ack = unpacked_data[2]
-    task_name = unpacked_data[3].decode('ascii').rstrip('\x00')
-    task_contents_str = unpacked_data[4].decode('ascii').rstrip('\x00')
+    if fields[1] == 0:
+        fields.append(int(bits[8:16], 2))      # Próximos 8 bits para o número de sequência
+    else:
+        print("Recebi um ACK")
+
+    print(f"o ID do agente é o {fields[0]}")
+    print(f"a message type é {fields[1]}")
     
-    # Converte a string JSON de volta para um dicionário (se `task_contents` foi serializado com `json.dumps`)
-    try:
-        task_contents = json.loads(task_contents_str)
-    except json.JSONDecodeError:
-        task_contents = {}  # Trata erro caso a string JSON esteja truncada ou inválida
-    
-    # Retorna os dados como uma lista
-    return [server_str, seq, ack, task_name, task_contents]
+    return fields # 2 indica que o que está a receber é binário
 
 def parse_tasks(agent_name : str) -> dict: # retorna um dicionário com as tarefas do agente
     data : dict = dict()
 
-    with open(agent_name+".json", "r") as file_json: # with garante que há um close do open
+    with open(agent_name + ".json", "r") as file_json: # with garante que há um close do open
             data = json.load(file_json)
 
     return data

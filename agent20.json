@@ -1,0 +1,31 @@
+{
+    "0": {
+        "frequency": 30,
+        "threshold": 99,       
+        "metric": 0
+    },
+    "1": {
+        "frequency": 20,
+        "threshold": 49,       
+        "metric": 1
+    },
+    "2": {
+        "frequency": 25,
+        "threshold": 300,       
+        "metric": 2,
+        "destination": "10.0.0.2"
+    },
+    "3": {
+        "frequency": 30,
+        "metric": 3,
+        "threshold": 5,       
+        "source": "10.0.0.1",
+        "destination": "10.0.0.2"
+    },
+    "4": {
+        "frequency": 30,       
+        "metric": 4,
+        "threshold": 1,        
+        "interface_name": "eth0"
+    }
+}
