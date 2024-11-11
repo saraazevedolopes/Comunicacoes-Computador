@@ -3,39 +3,86 @@ import json
 import parser
 from Shared import Shared
 import threading
+from Message_type import Message_type
+import ipaddress
 
 # envia uma tarefa serializada em bytes para um agente especificado através do socket UDP
-def send(s : socket.socket, address : tuple, agent_id : int, message_type : int, *args): #args é uma lista de 0 ou mais elementos, ack -> lista sem elementos, envio task -> n elementos
-    #transformar isto em lista para termos a possibilidade de ter um número variável de campos
-    agent_id = bin(agent_id)[2:].zfill(5)
-    message_type = bin(message_type)[2:].zfill(3)
-
-    message = agent_id + message_type 
+def send(s : socket.socket, address : tuple, agent_id : int, message_type : int, agent_data : Shared, *args): # args tem um id e um dicionário
+    # TODO transformar isto em lista para termos a possibilidade de ter um número variável de campos
+    fields : list = list()
+    fields.append(bin(agent_id)[2:].zfill(5)) # id agente
+    fields.append(bin(message_type)[2:].zfill(3)) # message type
     
+    if message_type == Message_type.TASK.value:
+        print(args)
+        print(len(args))
+        fields.append(bin(int(args[0]))[2:].zfill(5)) # task id
+        fields.append(bin(int(args[1]["frequency"]))[2:].zfill(8)) # freq
+        fields.append(bin(int(args[1]["threshold"]))[2:].zfill(16)) # threshold
+        fields.append(bin(int(args[1]["task_type"]))[2:].zfill(3)) # task_type
+
+        if args[1]["task_type"] == 2: # calcular latência
+            ip_int = int(ipaddress.IPv4Address(args[1]["destination"]))
+            ip_bin = format(ip_int, '032b')
+
+            fields.append(ip_bin) # destino para usar no ping
+        elif args[1]["task_type"] == 3: # calcular largura de banda + jitter
+            ip_src = int(ipaddress.IPv4Address(args[1]["source"]))
+            ip_src_bin = format(ip_src, '032b')
+            ip_dst = int(ipaddress.IPv4Address(args[1]["source"]))
+            ip_dst_bin = format(ip_dst, '032b')
+            
+            fields.append(ip_src_bin) # ip do servidor para usar no iperf
+            fields.append(ip_dst_bin) # ip do cliente para usar no iperf         
+        elif args[1]["task_type"] == 4:
+            interface : str = ''.join(format(ord(character), '08b') for character in args[1]["interface_name"]) 
+            fields.append(interface) # interface a monitorizar
+
+        print(args)
+        print(fields)
+        #args[1] : int =  
+    else:
+        print(f"isto não é uma task {fields[1]}")
+
+    agent_data.acquire_lock() # necessário para que outras threads não escrevam no mesmo nrº de sequência
+    fields.append(bin(agent_data.get_seq())[2:].zfill(8)) # número de 
+
+    message : str = ''
+
+    for field in fields:
+        message += field
+
+    print(f"o tipo de message é {type(message)}")
     message_bytes = int(message, 2).to_bytes(len(message) // 8, byteorder='big')
+    agent_data.inc_seq(len(message_bytes))
+    
+    agent_data.release_lock()
     # Enviar mensagem pelo socket UDP
     s.sendto(message_bytes, address)
 
+    
 
-# recebe uma mensagem UDP, extrai os campos
 def process(message : tuple, s : socket.socket, agent_list : dict): # mensagem ser um array é funcionamennto básico do socket
-    fields : list = parser.parse(message[0]) # [agent_id, message_type, seq]
+    fields : list = parser.parse(message[0]) #[agent_id, message_type, seq]
 
-    print(fields)
-    if fields[1] == 0:
+    print(fields) # exemplo - [20, 0, 0]
+    print(f"O enum é {Message_type.REGISTER.value} e o inteiro é {fields[1]}")
+    if fields[1] == Message_type.REGISTER.value:
         print(f"registo recebido do agente {fields[0]}")
         agent_list[fields[0]] = Shared() # cria um objeto partilhado
-        send(s, message[1], fields[0], 1) # envia ack de volta (message type 1)
+        
+        send(s, message[1], fields[0], Message_type.ACK.value, agent_list[fields[0]]) # envia ack de volta (message type 1)
+        
+        # a partir de aqui, vai-se tratar de enviar tarefas, o que faz parte do registo
+        address : tuple = message[1]
+        tasks : dict = parser.parse_tasks(str(fields[0]))
+
+        for key, value in tasks.items():
+            threading.Thread(target=send, args=(s, address, fields[0], Message_type.TASK.value, agent_list[fields[0]], key, value)).start()
     else:
         print("não é registo")
         
-        
-    address : tuple = message[1]
-    #tasks : dict = parser.parse_tasks(agent_name)
-
-    #for key, value in tasks.items():
-    #    threading.Thread(target=send, args=(agent_name, address, shared, key, value, s)).start()
-
+    
 
 def start(address: str, port: int): 
     agent_list : dict = dict()
