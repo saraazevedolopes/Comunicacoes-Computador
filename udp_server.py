@@ -12,6 +12,7 @@ def send(s : socket.socket, address : tuple, agent_id : int, message_type : int,
     fields : list = list()
     fields.append(bin(agent_id)[2:].zfill(5)) # id agente
     fields.append(bin(message_type)[2:].zfill(3)) # message type
+    fields.append(0) # arbitrário, este campo depois será preenchido com o número de sequência
     
     if message_type == Message_type.TASK.value:
         print(args)
@@ -45,7 +46,7 @@ def send(s : socket.socket, address : tuple, agent_id : int, message_type : int,
         print(f"isto não é uma task {fields[1]}")
 
     agent_data.acquire_lock() # necessário para que outras threads não escrevam no mesmo nrº de sequência
-    fields.append(bin(agent_data.get_seq())[2:].zfill(8)) # número de 
+    fields[2] = bin(agent_data.get_seq())[2:].zfill(8) # número de sequência
 
     message : str = ''
 
