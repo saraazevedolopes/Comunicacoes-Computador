@@ -30,7 +30,7 @@ def send(s : socket.socket, address : tuple, agent_id : int, message_type : int,
         elif args[1]["task_type"] == 3: # calcular largura de banda + jitter
             ip_src = int(ipaddress.IPv4Address(args[1]["source"]))
             ip_src_bin = format(ip_src, '032b')
-            ip_dst = int(ipaddress.IPv4Address(args[1]["source"]))
+            ip_dst = int(ipaddress.IPv4Address(args[1]["destination"]))
             ip_dst_bin = format(ip_dst, '032b')
             
             fields.append(ip_src_bin) # ip do servidor para usar no iperf
@@ -55,14 +55,15 @@ def send(s : socket.socket, address : tuple, agent_id : int, message_type : int,
 
     print(f"o tipo de message é {type(message)}")
     message_bytes = int(message, 2).to_bytes(len(message) // 8, byteorder='big')
-    agent_data.inc_seq(len(message_bytes))
+    
+    if message_type == Message_type.TASK.value:
+        agent_data.inc_seq(len(message_bytes))
     
     agent_data.release_lock()
     # Enviar mensagem pelo socket UDP
     s.sendto(message_bytes, address)
 
     
-
 def process(message : tuple, s : socket.socket, agent_list : dict): # mensagem ser um array é funcionamennto básico do socket
     fields : list = parser.parse(message[0]) #[agent_id, message_type, seq]
 
@@ -71,7 +72,7 @@ def process(message : tuple, s : socket.socket, agent_list : dict): # mensagem s
     if fields[1] == Message_type.REGISTER.value:
         print(f"registo recebido do agente {fields[0]}")
         agent_list[fields[0]] = Shared() # cria um objeto partilhado
-        
+        agent_list[fields[0]].inc_seq(len(message[0])) # aumenta o seq
         send(s, message[1], fields[0], Message_type.ACK.value, agent_list[fields[0]]) # envia ack de volta (message type 1)
         
         # a partir de aqui, vai-se tratar de enviar tarefas, o que faz parte do registo
