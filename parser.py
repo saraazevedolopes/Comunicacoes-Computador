@@ -10,17 +10,17 @@ def parse(message: bytes):
     # Extrai partes específicas da mensagem
     fields.append(int(bits[:5], 2))            # Primeiros 5 bits para o ID do agente
     fields.append(int(bits[5:8], 2))           # Próximos 3 bits para o tipo de mensagem
-    fields.append(int(bits[8:16], 2))          # Próximos 8 bits para o número de sequência
+    fields.append(int(bits[8:24], 2))          # Próximos 8 bits para o número de sequência
   
     if fields[1] == Message_type.ACK.value:
         print("Recebi um ACK")
         print(f"O ACK é {fields[2]}")
     elif fields[1] == Message_type.TASK.value:
         print(f"Recebi uma tarefa com seq = {fields[2]}")
-        fields.append(int(bits[16:21], 2))     # Task ID
-        fields.append(int(bits[21:29], 2))     # Frequency
-        fields.append(int(bits[29:45], 2))     # Threshold
-        fields.append(int(bits[45:48], 2))     # Task Type
+        fields.append(int(bits[24:29], 2))     # Task ID
+        fields.append(int(bits[29:37], 2))     # Frequency
+        fields.append(int(bits[37:53], 2))     # Threshold
+        fields.append(int(bits[53:56], 2))     # Task Type
 
         print(f"""Os fields são:
         Agent_id: {fields[0]}
@@ -33,7 +33,7 @@ def parse(message: bytes):
 
         if fields[6] == 2:
             # Obter os 32 bits que representam o endereço IP
-            ip_bits = bits[48:80]
+            ip_bits = bits[56:88]
 
             # Dividir em grupos de 8 bits
             octets = [ip_bits[i:i+8] for i in range(0, 32, 8)]
@@ -48,14 +48,29 @@ def parse(message: bytes):
             
             # Destination Address
             print(f"Endereço IP: {ip_address}")
+        elif fields[6] == 4:
+            fields.append(str(bits[56:136]))
+            
+            # Divide em blocos de 8 bits
+            chunks = [bits[56:136][i:i+8] for i in range(0, 80, 8)]
 
+            # Converte cada bloco de 8 bits num carácter
+            original_string = ''.join(chr(int(chunk, 2)) for chunk in chunks)
+
+            # Remove possíveis espaços adicionais adicionados por ljust ou rjust
+            original_string = original_string.strip()
+
+            
         """
         fields.append(bin(int(args[0]))[2:].zfill(5)) # task id
         fields.append(bin(int(args[1]["frequency"]))[2:].zfill(8)) # freq
         fields.append(bin(int(args[1]["threshold"]))[2:].zfill(16)) # threshold
         fields.append(bin(int(args[1]["task_type"]))[2:].zfill(3)) # task_type"""
     elif fields[1] == Message_type.METRIC.value:
-        print(f"Recebi uma métrica")
+        task_id = int(bits[24:29], 2)
+        task_type = int(bits[29:32], 2)
+        metric = int(bits[32:48], 2)
+        print(f"Recebi uma métrica com {task_id} {task_type} {metric}")
     elif fields[1] == Message_type.END.value:
         print(f"Recebi um END")
 

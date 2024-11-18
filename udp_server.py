@@ -17,10 +17,10 @@ def send(s : socket.socket, address : tuple, agent_id : int, message_type : int,
     if message_type == Message_type.TASK.value:
         print(args)
         print(len(args))
-        fields.append(bin(int(args[0]))[2:].zfill(5)) # task id
-        fields.append(bin(int(args[1]["frequency"]))[2:].zfill(8)) # freq
+        fields.append(bin(int(args[0]))[2:].zfill(5))               # task id
+        fields.append(bin(int(args[1]["frequency"]))[2:].zfill(8))  # freq
         fields.append(bin(int(args[1]["threshold"]))[2:].zfill(16)) # threshold
-        fields.append(bin(int(args[1]["task_type"]))[2:].zfill(3)) # task_type
+        fields.append(bin(int(args[1]["task_type"]))[2:].zfill(3))  # task_type
 
         if args[1]["task_type"] == 2: # calcular latência
             ip_int = int(ipaddress.IPv4Address(args[1]["destination"]))
@@ -36,8 +36,10 @@ def send(s : socket.socket, address : tuple, agent_id : int, message_type : int,
             fields.append(ip_src_bin) # ip do servidor para usar no iperf
             fields.append(ip_dst_bin) # ip do cliente para usar no iperf         
         elif args[1]["task_type"] == 4:
-            interface : str = ''.join(format(ord(character), '08b') for character in args[1]["interface_name"]) 
+            interf = args[1]["interface_name"].ljust(10)
+            interface : str = ''.join(format(ord(character), '08b') for character in interf) 
             fields.append(interface) # interface a monitorizar
+
 
         print(args)
         print(fields)
@@ -46,7 +48,7 @@ def send(s : socket.socket, address : tuple, agent_id : int, message_type : int,
         print(f"isto não é uma task {fields[1]}")
 
     agent_data.acquire_lock() # necessário para que outras threads não escrevam no mesmo nrº de sequência
-    fields[2] = bin(agent_data.get_seq())[2:].zfill(8) # número de sequência
+    fields[2] = bin(agent_data.get_seq())[2:].zfill(16) # número de sequência
 
     message : str = ''
 

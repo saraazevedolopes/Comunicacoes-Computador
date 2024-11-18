@@ -22,7 +22,7 @@ def send(s : socket.socket, address : tuple, agent_id : int, message_type : int,
         print(f"A retransmitir o pacote de seq={args[0]}")
         seq = args[0]
 
-    fields[2] = bin(seq)[2:].zfill(8) # número de sequência
+    fields[2] = bin(seq)[2:].zfill(16) # número de sequência
 
     if message_type == 3:
         fields.append(bin(args[0])[2:].zfill(5))
@@ -33,9 +33,8 @@ def send(s : socket.socket, address : tuple, agent_id : int, message_type : int,
             pass
         elif args[1] == 2:
             print("A enviar métrica de latência")
-            packed = struct.pack('!d', args[1])
-            binary = ''.join(f'{byte:08b}' for byte in packed)
-            fields.append(binary[2:])
+            fields.append(bin(args[2])[2:].zfill(16))
+            
         elif args[1] == 3:
             pass
         else:
@@ -64,7 +63,7 @@ def process(s : socket.socket, message : tuple, shared_server : Shared):
     print(f"Os campos são {fields}")
 
     agent_id, message_type = fields[:2]
-    if fields[1] == 1:
+    if fields[1] == 1: # é um ack
         try:
             shared_server.acquire_lock()
             if fields[2] > shared_server.get_ack():
@@ -76,6 +75,7 @@ def process(s : socket.socket, message : tuple, shared_server : Shared):
         finally:
             shared_server.release_lock()
     else:
+        #TER CUIDADO COM RETRANSMISSÕES
         try:
             shared_server.acquire_lock()
             #print(f"O tamanho do pacote recebido é {len(message[0])}")
@@ -85,7 +85,7 @@ def process(s : socket.socket, message : tuple, shared_server : Shared):
         finally:
             shared_server.release_lock()
 
-    if len(fields) == 8:
+    if len(fields) == 8 or (message_type == 2 and fields[6] == 4):
         print(fields)
         run_task(s, message[1], shared_server, fields)
           
@@ -129,7 +129,7 @@ def run_task(s : socket.socket, address : tuple, shared_server : Shared, fields 
             print(result)
             ms = round(sum(result)/len(result),0)
             print(f"resultado em int: {int(ms)}")
-            threading.Thread(target=send, args=(s, address, agent_id, 3, shared_server, False, task_id, task_type, ms)).start() 
+            threading.Thread(target=send, args=(s, address, agent_id, 3, shared_server, False, task_id, task_type, int(ms))).start() 
             
             #s : socket.socket, address : tuple, agent_id : int, message_type : int, shared_server : Shared, retransmission : bool, *args) -> int: # args tem um id e um dicionário
             #send()
@@ -138,13 +138,15 @@ def run_task(s : socket.socket, address : tuple, shared_server : Shared, fields 
     elif task_type == 3:
         print("Isto é um pedido de largura de banda")
     elif task_type == 4:
-        print("Isto é um pedido de interface")
-
+        print(f"Isto é um pedido para a interface {fields}")
+        
+        """
         while True:
             for iface in interfaces:
                 iface_details = netifaces.ifaddresses(iface)
                 print(f"A interface {iface} tem esta informação: {iface_details}")
             time.sleep(frequency)
+        """
 
 def register(s : socket.socket, address: str, port: int, agent_name : str, shared_server : Shared):
     success = False
