@@ -81,6 +81,8 @@ def process(message : tuple, s : socket.socket, agent_list : dict): # mensagem s
 
         for key, value in tasks.items():
             threading.Thread(target=send, args=(s, address, fields[0], Message_type.TASK.value, agent_list[fields[0]], key, value)).start()
+    elif fields[1] == Message_type.METRIC.value:
+        pass
     else:
         print("não é registo")
         

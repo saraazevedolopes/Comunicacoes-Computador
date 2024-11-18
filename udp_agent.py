@@ -5,8 +5,9 @@ import time
 from Shared import Shared
 from pythonping import ping
 import psutil
-
+import subprocess
 import netifaces
+import struct
 
 def send(s : socket.socket, address : tuple, agent_id : int, message_type : int, shared_server : Shared, retransmission : bool, *args) -> int: # args tem um id e um dicionário
     fields : list = list()
@@ -23,6 +24,22 @@ def send(s : socket.socket, address : tuple, agent_id : int, message_type : int,
 
     fields[2] = bin(seq)[2:].zfill(8) # número de sequência
 
+    if message_type == 3:
+        fields.append(bin(args[0])[2:].zfill(5))
+        fields.append(bin(args[1])[2:].zfill(3))
+        if args[1] == 0:
+            pass
+        elif args[1] == 1:
+            pass
+        elif args[1] == 2:
+            print("A enviar métrica de latência")
+            packed = struct.pack('!d', args[1])
+            binary = ''.join(f'{byte:08b}' for byte in packed)
+            fields.append(binary[2:])
+        elif args[1] == 3:
+            pass
+        else:
+            pass
     message : str = ''
 
     for field in fields:
@@ -74,9 +91,10 @@ def process(s : socket.socket, message : tuple, shared_server : Shared):
           
 def run_task(s : socket.socket, address : tuple, shared_server : Shared, fields : list):
     print(f"args: {fields}")
-    task_id = fields[0]
-    frequency = fields[1]
-    threshold = fields[2]
+    agent_id = fields[0]
+    task_id = fields[3]
+    frequency = fields[4]
+    threshold = fields[5]
     task_type = fields[6]
 
     if task_type == 0:
@@ -96,8 +114,26 @@ def run_task(s : socket.socket, address : tuple, shared_server : Shared, fields 
         destination = fields[7]
 
         while True:
-            responses = ping(destination)
-            print(f"resultado do ping: {responses}")
+            responses = subprocess.run(
+                ["ping", "-c", "4", destination],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+            result = list()
+            for line in responses.stdout.splitlines():
+                if "bytes from" in line or "Reply from" in line:  # Verifica se a linha contém resposta válida
+                    result.append(float(line.split(" ")[6][5:]))
+                elif "min/avg/max" in line or "rtt min/avg/max" in line:  # Adapta dependendo do sistema
+                    print("Resumo do tempo de resposta:", line)
+            print(result)
+            ms = round(sum(result)/len(result),0)
+            print(f"resultado em int: {int(ms)}")
+            threading.Thread(target=send, args=(s, address, agent_id, 3, shared_server, False, task_id, task_type, ms)).start() 
+            
+            #s : socket.socket, address : tuple, agent_id : int, message_type : int, shared_server : Shared, retransmission : bool, *args) -> int: # args tem um id e um dicionário
+            #send()
+
             time.sleep(frequency)
     elif task_type == 3:
         print("Isto é um pedido de largura de banda")
