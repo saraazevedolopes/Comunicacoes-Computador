@@ -8,6 +8,7 @@ import psutil
 import subprocess
 import netifaces
 import struct
+from datetime import datetime
 
 def send(s : socket.socket, address : tuple, agent_id : int, message_type : int, shared_server : Shared, retransmission : bool, *args) -> int: # args tem um id e um dicionário
     fields : list = list()
@@ -28,9 +29,9 @@ def send(s : socket.socket, address : tuple, agent_id : int, message_type : int,
         fields.append(bin(args[0])[2:].zfill(5))
         fields.append(bin(args[1])[2:].zfill(3))
         if args[1] == 0:
-            pass
+            fields.append(bin(args[2])[2:].zfill(16))
         elif args[1] == 1:
-            pass
+            fields.append(bin(args[2])[2:].zfill(16))
         elif args[1] == 2:
             print("A enviar métrica de latência")
             fields.append(bin(args[2])[2:].zfill(16))
@@ -85,7 +86,7 @@ def process(s : socket.socket, message : tuple, shared_server : Shared):
         finally:
             shared_server.release_lock()
 
-    if len(fields) == 8 or (message_type == 2 and fields[6] == 4):
+    if message_type == 2 and (fields[6] in [0,1,2,4]): # 0 CPU, 2 latência, 4 interface
         print(fields)
         run_task(s, message[1], shared_server, fields)
           
@@ -102,12 +103,14 @@ def run_task(s : socket.socket, address : tuple, shared_server : Shared, fields 
         while True:
             cpu_usage = psutil.cpu_percent()
             print(f"Utilização do CPU: {cpu_usage}")
+            print(f"Timestamp CPU {datetime.now()}")
+            threading.Thread(target=send, args=(s, address, agent_id, 3, shared_server, False, task_id, task_type, int(round(cpu_usage,0)))).start() 
             time.sleep(frequency)
     elif task_type == 1:
-        print("Isto é um pedido de RAM")
         while True:
             ram_usage = psutil.virtual_memory()
-            print(f"Utilização da RAM: {ram_usage}")
+            print(f"Utilização da RAM: {ram_usage.percent}%")
+            threading.Thread(target=send, args=(s, address, agent_id, 3, shared_server, False, task_id, task_type, int(round(ram_usage.percent,0)))).start() 
             time.sleep(frequency)
     elif task_type == 2:
         print("Isto é um pedido de latência")
@@ -195,5 +198,4 @@ def start(address: str, port: int, agent_name : str):
         print("recebi uma mensagem UDP!")
         threading.Thread(target=process, args=(s, message, shared_server)).start() # uma thread por task
 
-    s.close() 
-    
+    s.close()

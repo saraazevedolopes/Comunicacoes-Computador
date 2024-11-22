@@ -69,7 +69,9 @@ def parse(message: bytes):
     elif fields[1] == Message_type.METRIC.value:
         task_id = int(bits[24:29], 2)
         task_type = int(bits[29:32], 2)
-        metric = int(bits[32:48], 2)
+
+        if task_type in [0,1,2]:
+            metric = int(bits[32:48], 2)
         print(f"Recebi uma métrica com {task_id} {task_type} {metric}")
     elif fields[1] == Message_type.END.value:
         print(f"Recebi um END")

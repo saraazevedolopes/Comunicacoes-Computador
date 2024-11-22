@@ -8,11 +8,10 @@ import ipaddress
 
 # envia uma tarefa serializada em bytes para um agente especificado através do socket UDP
 def send(s : socket.socket, address : tuple, agent_id : int, message_type : int, agent_data : Shared, *args): # args tem um id e um dicionário
-    # TODO transformar isto em lista para termos a possibilidade de ter um número variável de campos
     fields : list = list()
-    fields.append(bin(agent_id)[2:].zfill(5)) # id agente
-    fields.append(bin(message_type)[2:].zfill(3)) # message type
-    fields.append(0) # arbitrário, este campo depois será preenchido com o número de sequência
+    fields.append(bin(agent_id)[2:].zfill(5))                       # id agente
+    fields.append(bin(message_type)[2:].zfill(3))                   # message type
+    fields.append(0)                                                # número de sequência
     
     if message_type == Message_type.TASK.value:
         print(args)
@@ -22,36 +21,33 @@ def send(s : socket.socket, address : tuple, agent_id : int, message_type : int,
         fields.append(bin(int(args[1]["threshold"]))[2:].zfill(16)) # threshold
         fields.append(bin(int(args[1]["task_type"]))[2:].zfill(3))  # task_type
 
-        if args[1]["task_type"] == 2: # calcular latência
+        if args[1]["task_type"] == 2:                               # calcular latência
             ip_int = int(ipaddress.IPv4Address(args[1]["destination"]))
             ip_bin = format(ip_int, '032b')
 
-            fields.append(ip_bin) # destino para usar no ping
-        elif args[1]["task_type"] == 3: # calcular largura de banda + jitter
+            fields.append(ip_bin)                                   # destino para usar no ping
+        elif args[1]["task_type"] == 3:                             # calcular largura de banda + jitter
             ip_src = int(ipaddress.IPv4Address(args[1]["source"]))
             ip_src_bin = format(ip_src, '032b')
             ip_dst = int(ipaddress.IPv4Address(args[1]["destination"]))
             ip_dst_bin = format(ip_dst, '032b')
             
-            fields.append(ip_src_bin) # ip do servidor para usar no iperf
-            fields.append(ip_dst_bin) # ip do cliente para usar no iperf         
-        elif args[1]["task_type"] == 4:
+            fields.append(ip_src_bin)                               # ip do servidor para usar no iperf
+            fields.append(ip_dst_bin)                               # ip do cliente para usar no iperf         
+        elif args[1]["task_type"] == 4:                             # interface a monitorizar
             interf = args[1]["interface_name"].ljust(10)
             interface : str = ''.join(format(ord(character), '08b') for character in interf) 
-            fields.append(interface) # interface a monitorizar
-
+            fields.append(interface)                                
 
         print(args)
         print(fields)
-        #args[1] : int =  
     else:
         print(f"isto não é uma task {fields[1]}")
 
     agent_data.acquire_lock() # necessário para que outras threads não escrevam no mesmo nrº de sequência
-    fields[2] = bin(agent_data.get_seq())[2:].zfill(16) # número de sequência
+    fields[2] = bin(agent_data.get_seq())[2:].zfill(16)             # número de sequência
 
     message : str = ''
-
     for field in fields:
         message += field
 
@@ -84,7 +80,7 @@ def process(message : tuple, s : socket.socket, agent_list : dict): # mensagem s
         for key, value in tasks.items():
             threading.Thread(target=send, args=(s, address, fields[0], Message_type.TASK.value, agent_list[fields[0]], key, value)).start()
     elif fields[1] == Message_type.METRIC.value:
-        pass
+        print(f"RECEBI MÉTRICAS com {fields}")
     else:
         print("não é registo")
         
@@ -100,7 +96,7 @@ def start(address: str, port: int):
     
     while True:  
         message = s.recvfrom(1024) # buffer de 1024 bytes para receber mensagem (array de bytes)
-        print("recebi uma mensagem UDP!")
+        #print("recebi uma mensagem UDP!")
         threading.Thread(target=process, args=(message, s, agent_list)).start()
 
     s.close() 
