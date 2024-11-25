@@ -3,6 +3,37 @@ from Message_type import Message_type
 import logger
 
 # Interpreta uma mensagem recebida em formato binário e extrai os campos relevantes para uma lista
+def parse_tcp(message: bytes) -> list:
+    fields : list = []
+
+    # Converte bytes para bits
+    bits = ''.join(f'{byte:08b}' for byte in message) 
+
+    # Extrai partes da mensagem
+    fields.append(int(bits[:5], 2))     # Primeiros 5 bits para o ID do agente
+    fields.append(int(bits[5:8], 2))  # Task Type
+    fields.append(int(bits[8:16], 2))     # Task ID
+   
+
+    logger.log(f"""Os fields são:
+    Agent_id: {fields[0]}
+    Task_ID: {fields[1]}
+    Task_type: {fields[2]}\n""")
+
+    # Task_type == 0,1,2 -> CPU, RAM, ou Latência
+    if fields[1] in [0,1,2]:
+        fields.append(int(bits[16:32], 2))
+    elif fields[1] == 3:
+        fields.append(int(bits[16:32], 2))
+        fields.append(chr(int(bits[32:40], 2)))
+    else:
+        fields.append(int(bits[16:24], 2))
+    
+    print(f"ALERTFLOW FIELDS RECEBIDOS: {fields}")
+
+    return fields 
+
+# Interpreta uma mensagem recebida em formato binário e extrai os campos relevantes para uma lista
 def parse(message: bytes) -> list:
     fields : list = []
 
