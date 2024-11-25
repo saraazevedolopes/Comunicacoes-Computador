@@ -10,4 +10,3 @@ def start(address: str, port: int):
 
     mensagem = s.send("mensagem TCP".encode()) # buffer de 1024 bytes para enviar mensagem (array de bytes)
     
-    
