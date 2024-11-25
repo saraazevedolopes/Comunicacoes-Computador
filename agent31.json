@@ -1,0 +1,31 @@
+{
+    "0": {
+        "frequency": 20,
+        "threshold": 45,       
+        "task_type": 0
+    },
+    "1": {
+        "frequency": 22,
+        "threshold": 49,       
+        "task_type": 1
+    },
+    "2": {
+        "frequency": 20,
+        "threshold": 200,       
+        "task_type": 2,
+        "destination": "10.0.1.1"
+    },
+    "3": {
+        "frequency": 30,
+        "task_type": 3,
+        "threshold": 5,       
+        "is_server": 0,
+        "destination": "10.0.1.1"
+    },
+    "4": {
+        "frequency": 20,       
+        "task_type": 4,
+        "threshold": 1,        
+        "interface_name": "eth0"
+    }
+}

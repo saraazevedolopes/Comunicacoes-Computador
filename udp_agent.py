@@ -186,7 +186,13 @@ def run_task(s : socket.socket, address : tuple, shared_server : Shared, fields 
             
             print("TERMINEI O IPERF")
             if not responses.stderr:
-                line = responses.stdout.splitlines()[-1]
+                if is_server:
+                    line = responses.stdout.splitlines()[-1]
+                    print(f"{line}")
+                else:
+                    line = responses.stdout.splitlines()[-3]
+                    print(f"{line}")
+
                 campos = line.split(" ")
                 numbers = re.findall(r'-?\d+\.?\d*', line)
                 
