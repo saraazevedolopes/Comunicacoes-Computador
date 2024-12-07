@@ -1,6 +1,6 @@
 DNS: Os ficheiros dentro da diretoria DNS devem ser colocados dentro de /etc/bind/
 
-O servidor de DNS é necessário para que todos os outros componentes funcionem, deve ser arrancado em primeiro lugar:
+O servidor de DNS é necessário para que todos os outros componentes funcionem, deve ser arrancado em primeiro lugar
 no servidor DNS: named -g -4
 
 O servidor deve ser inicializado com: python3 server.py 0-7(nível de logging desejado, 0=DEBUG 1=INFO 4=WARNING 7=FATAL)
