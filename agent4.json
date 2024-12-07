@@ -1,0 +1,25 @@
+{
+    "0": {
+        "frequency": 5,
+        "threshold": 70,       
+        "task_type": 0
+    },
+    "1": {
+        "frequency": 5,
+        "threshold": 60,       
+        "task_type": 1
+    },
+    "2": {
+        "frequency": 25,
+        "threshold": 80,       
+        "task_type": 2,
+        "destination": "agent20"
+    },
+    "3": {
+        "frequency": 10,
+        "threshold": 60,       
+        "task_type": 2,
+        "destination": "server"
+    }
+    
+}

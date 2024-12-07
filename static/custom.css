@@ -1,0 +1,177 @@
+/* General Body Styling */
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #f5f7fa, #c3cfe2); /* Soft gradient */
+    min-height: 100vh;
+    color: #333;
+}
+
+/* Header Styling */
+.header {
+    background: #333333; /* Dark grey header */
+    color: white;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 3rem;
+    font-weight: bold;
+}
+
+.header p {
+    margin: 5px 0 0;
+    font-size: 1.2rem;
+    font-weight: 300;
+}
+
+/* Sidebar Styling */
+.sidebar {
+    height: calc(100vh - 100px); /* Adjust height for header */
+    background: linear-gradient(135deg, #ffffff, #dfe9f3); /* Clean light gradient */
+    color: #1c1c1c; /* Dark grey for contrast */
+    padding-top: 20px;
+    border-right: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Sidebar List Styling */
+.sidebar .nav {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center align all items */
+    padding: 0;
+}
+
+.sidebar .nav-item {
+    width: 100%; /* Ensure full-width clickable links */
+    text-align: center; /* Center text */
+}
+
+/*task bar animation*/
+.sidebar .nav-link {
+    display: block;
+    padding: 12px 20px;
+    color: #000000; /* Black text for links */
+    font-weight: bold;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: all 0.1s ease-in-out; /* originally 0.3s*/
+}
+
+/* Hover Effect for Sidebar Links */
+.sidebar .nav-link:hover {
+    background-color: #ffe5d1; /* Light orange on hover */
+    color: #000000; /* Black text remains on hover */
+}
+
+/* Active Link Highlight */
+.sidebar .nav-link.active {
+    background-color: #ffd9b3; /* Slightly darker light orange for active */
+    color: #000000; /* Black text for active link */
+    font-weight: bold;
+}
+
+/* Highlighted Headers for Metrics and Alerts */
+.highlight-header {
+    font-weight: bold;
+    text-align: center;
+    padding: 10px;
+    background: #333333; /* Dark gray background */
+    color: white; /* Bold white text */
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+/* Badge for Task Type */
+.badge {
+    font-size: 0.9rem;
+    margin-left: 10px;
+    background: #6c757d; /* Neutral grey for badge */
+    color: white;
+}
+
+/* Task Details (Collapsed Section) */
+.task-details {
+    background: #ffffff; /* Clean white background */
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Table Styling */
+.table {
+    width: 100%;
+    margin-bottom: 1rem;
+    color: #212529;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table th {
+    font-weight: bold;
+    text-align: center;
+}
+
+.table td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: #f8f9fa;
+}
+
+/* Gradient Background for Task Toggle Buttons */
+.task-toggle {
+    width: 100%;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    background: linear-gradient(to right, black, white); /* Gradient from black to white */
+    color: white; /* Text color */
+    font-size: 1.2rem;
+    padding: 12px 15px;
+    text-align: left;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: background 0.1s ease, transform 0.1s ease; /*originally 0.3 0.2*/
+    cursor: pointer;
+    border: none;
+}
+
+.task-toggle:hover {
+    background: linear-gradient(to right, #333333, #e6e6e6); /* Darker gradient on hover */
+    transform: translateY(-1px); /* Subtle hover effect */
+}
+
+/* List Items for Tables */
+.list-group-item {
+    background: #f8f9fa; /* Light grey for items */
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    margin-bottom: 5px;
+    padding: 8px;
+    font-size: 1rem;
+}
+
+.list-group-item:hover {
+    background: #e9ecef; /* Slightly darker grey on hover */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.nav-link.active {
+    background-color: #ffe5b4; /* Light orange */
+    color: #000; /* Black text for contrast */
+    font-weight: bold;
+    border-radius: 5px; /* Optional for a rounded effect */
+}
+/* Sidebar Transition for Responsiveness */
+@media (max-width: 768px) {
+    .sidebar {
+        height: auto;
+        position: relative;
+    }
+}

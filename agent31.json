@@ -13,14 +13,14 @@
         "frequency": 20,
         "threshold": 200,       
         "task_type": 2,
-        "destination": "10.0.1.1"
+        "destination": "server"
     },
     "3": {
         "frequency": 30,
         "task_type": 3,
-        "threshold": 5,       
+        "threshold": [3,100,10],       
         "is_server": 0,
-        "destination": "10.0.1.1"
+        "destination": "agent20"
     },
     "4": {
         "frequency": 20,       

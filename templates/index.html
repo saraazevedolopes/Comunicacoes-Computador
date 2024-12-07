@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container text-center my-5">
+    <h2 class="fw-bold mb-4">Powered by:</h2>
+    <!-- Row to display images -->
+    <div class="row">
+        <!-- AlertFlow Image -->
+        <div class="col-md-6">
+            <img src="{{ url_for('static', filename='alertflow.jpg') }}" alt="AlertFlow Logo" class="img-fluid rounded" style="width: 80%;">
+        </div>
+
+        <!-- NetTask Image -->
+        <div class="col-md-6">
+            <img src="{{ url_for('static', filename='nettask.jpg') }}" alt="NetTask Logo" class="img-fluid rounded" style="width: 80%;">
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,14 @@
+$TTL 86400 ; 24 hours TTL (default)
+@       IN      SOA     ns1.cc2024. admin.cc2024. (
+                        2023112101 ; Serial (YYYYMMDDXX format)
+                        3600       ; Refresh
+                        1800       ; Retry
+                        1209600    ; Expire
+                        86400      ; Minimum TTL
+)
+
+; Nameservers
+@       IN      NS      ns1.cc2024.
+
+; Reverse PTR Records
+10       IN      PTR     ns1.cc2024.

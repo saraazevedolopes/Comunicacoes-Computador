@@ -2,7 +2,7 @@ import threading
 from datetime import datetime
 
 class Shared:
-    def __init__(self):
+    def __init__(self, address : tuple=None):
         self.seq = 0
         self.ack = 0
         self.lock = threading.RLock()
@@ -11,9 +11,8 @@ class Shared:
         self.received_ack = False
         self.received_packet = False
         self.ack_lock = threading.RLock()
-
-    def print(self):
-        print(f"Dados deste agente: seq={self.seq}, ack={self.ack}")
+        self.packets_received = set()
+        self.address = address
 
     def acquire_lock(self):
         self.lock.acquire()
@@ -27,19 +26,31 @@ class Shared:
     def notify_ack_condition(self):
         self.ack_condition.notifyAll()
     
-    def acquire_received_condition(self, seq : int) -> bool: # false -> timeout
+    def received_seq(self, seq : int) -> bool:
+        return seq in self.packets_received
+    
+    def add_packet(self, seq : int):
+        self.packets_received.add(seq)
+
+    def acquire_received_condition(self, seq : int, agent_logger) -> bool: # false -> timeout
         timestamp = datetime.now()
         difference = 0
-
+        success = True
         try:
             self.lock.acquire()
-            while self.ack < seq and difference < 5 : # timeout = 5s
+            while (self.ack <= seq and difference < 2) and self.repeated_acks < 3: #or (self.repeated_acks < 3 and self.ack == seq): #and seq != 0): timeout = 2s
                 self.received_condition.wait()
                 difference = (datetime.now() - timestamp).total_seconds()
-                print(f"A difference é {difference}")
+                
+            if self.repeated_acks == 3:
+                self.repeated_acks = 0
+                agent_logger.warning(f"3 duplicated ACKs with {seq}")
+                success = False
+            elif difference > 2:
+                success = False
+                agent_logger.warning(f"TIMEOUT while sending packet with seq={seq}")
 
-            print(f"Saí do loop e a diferença é {difference}")
-            return difference < 5
+            return success
         finally:
             self.lock.release()
 

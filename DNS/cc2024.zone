@@ -1,0 +1,19 @@
+$TTL 86400  ; Default Time to Live
+@       IN      SOA     ns1.cc2024. admin.cc2024. (
+                        2023112101  ; Serial number (YYYYMMDDXX)
+                        3600        ; Refresh time
+                        1800        ; Retry time
+                        1209600     ; Expire time
+                        86400       ; Minimum TTL
+)
+
+; Nameservers
+@       IN      NS      ns1.cc2024.
+
+; A Records for Nameservers
+ns1     IN      A       10.0.4.10
+; Server Record
+server  IN      A       10.0.8.10
+agent20 IN      A       10.0.5.10
+agent31 IN      A       10.0.6.10
+agent4  IN      A       10.0.7.10

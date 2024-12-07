@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div>
+    <div class="page-title">
+        <h2>Agent {{ agent_name }}</h2>
+    </div>
+
+    <div id="tasks-container">
+        <!-- Tasks will be dynamically populated -->
+    </div>
+</div>
+
+<script>
+    const agentName = "{{ agent_name }}";
+
+    function updateTasks() {
+        const collapseStates = {};
+        document.querySelectorAll('.collapse').forEach((task, index) => {
+            collapseStates[index] = task.classList.contains('show');
+        });
+
+        fetch(`/data/${agentName}`)
+            .then(response => response.json())
+            .then(data => {
+                const tasksContainer = document.getElementById('tasks-container');
+                tasksContainer.innerHTML = '';
+
+                data.forEach(([taskId, taskType, netMetrics, alertFlow]) => {
+                    const taskButton = document.createElement('button');
+                    taskButton.className = 'btn btn-primary btn-block text-start task-toggle';
+                    taskButton.type = 'button';
+                    taskButton.setAttribute('data-bs-toggle', 'collapse');
+                    taskButton.setAttribute('data-bs-target', `#task-${taskId}`);
+                    taskButton.setAttribute('aria-expanded', 'false');
+                    taskButton.setAttribute('aria-controls', `task-${taskId}`);
+                    taskButton.innerHTML = `Task ${taskId} <span class="badge bg-light text-dark">${taskType}</span>`;
+
+                    const taskDetails = document.createElement('div');
+                    taskDetails.id = `task-${taskId}`;
+                    taskDetails.className = 'collapse mt-3';
+                    if (collapseStates[taskId]) {
+                        taskDetails.classList.add('show');
+                    }
+
+                    const row = document.createElement('div');
+                    row.className = 'row task-details';
+
+                    const netTaskCol = document.createElement('div');
+                    netTaskCol.className = 'col-md-6';
+                    netTaskCol.innerHTML = `
+                        <h5>NetTask</h5>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th class="text-center">Timestamp</th>
+                                    <th class="text-center">Metric</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${netMetrics.length > 0 ? netMetrics.map(([timestamp, metric]) => `
+                                    <tr>
+                                        <td class="text-center">${timestamp}</td>
+                                        <td class="text-center">${metric}</td>
+                                    </tr>
+                                `).join('') : `<tr><td colspan="2" class="text-center">No metrics yet</td></tr>`}
+                            </tbody>
+                        </table>
+                    `;
+
+                    const alertFlowCol = document.createElement('div');
+                    alertFlowCol.className = 'col-md-6';
+                    alertFlowCol.innerHTML = `
+                        <h5>AlertFlow</h5>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th class="text-center">Timestamp</th>
+                                    <th class="text-center">Threshold</th>
+                                    <th class="text-center">Metric</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${alertFlow.length > 0 ? alertFlow.map(([timestamp, threshold, metric]) => `
+                                    <tr>
+                                        <td class="text-center">${timestamp}</td>
+                                        <td class="text-center">${threshold}</td>
+                                        <td class="text-center">${metric}</td>
+                                    </tr>
+                                `).join('') : `<tr><td colspan="3" class="text-center">No alerts yet</td></tr>`}
+                            </tbody>
+                        </table>
+                    `;
+
+                    row.appendChild(netTaskCol);
+                    row.appendChild(alertFlowCol);
+                    taskDetails.appendChild(row);
+
+                    tasksContainer.appendChild(taskButton);
+                    tasksContainer.appendChild(taskDetails);
+                });
+            })
+            .catch(error => console.error("Error updating tasks:", error));
+    }
+
+    setInterval(updateTasks, 2000);
+    updateTasks();
+</script>
+{% endblock %}

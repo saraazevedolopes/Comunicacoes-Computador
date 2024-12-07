@@ -4,6 +4,10 @@ node n1 {
     network-config {
 	hostname n1
 	!
+	interface eth3
+	 ip address 10.0.8.1/24
+	 ipv6 address 2001:0::1/64
+	!
 	interface eth2
 	 ip address 10.0.4.1/24
 	!
@@ -20,6 +24,7 @@ node n1 {
     interface-peer {eth0 n2}
     interface-peer {eth1 n4}
     interface-peer {eth2 n5}
+    interface-peer {eth3 n9}
 }
 
 node n2 {
@@ -98,15 +103,15 @@ node n5 {
     type router
     model host
     network-config {
-	hostname PC1
+	hostname DNS
 	!
 	interface eth0
 	 ip address 10.0.4.10/24
 	!
     }
     canvas c1
-    iconcoords {452.0 30.0}
-    labelcoords {452.0 62.0}
+    iconcoords {319.0 74.0}
+    labelcoords {319.0 106.0}
     interface-peer {eth0 n1}
     custom-config {
 	custom-config-id service:UserDefined
@@ -134,7 +139,7 @@ node n6 {
     type router
     model host
     network-config {
-	hostname PC2
+	hostname Agent20
 	!
 	interface eth0
 	 ip address 10.0.5.10/24
@@ -144,13 +149,33 @@ node n6 {
     iconcoords {886.0 304.0}
     labelcoords {886.0 336.0}
     interface-peer {eth0 n2}
+    custom-config {
+	custom-config-id service:UserDefined
+	custom-command UserDefined
+	config {
+	files=('preenche_resolvconf.sh', )
+	cmdup=('mkdir -p /run/systemd/resolve', 'touch /run/systemd/resolve/stub-resolv.conf', 'sh preenche_resolvconf.sh', )
+	}
+    }
+    custom-config {
+	custom-config-id service:UserDefined:preenche_resolvconf.sh
+	custom-command preenche_resolvconf.sh
+	config {
+	preenche_resolvconf.sh
+	echo "# -- gerado pela script de arranque..." >> /etc/resolv.conf
+	echo "domain cc2024" >> /etc/resolv.conf
+	echo "nameserver 10.0.4.10" >> /etc/resolv.conf
+	echo "" >> /etc/resolv.conf 
+	}
+    }
+    services {DefaultRoute SSH UserDefined}
 }
 
 node n7 {
     type router
     model host
     network-config {
-	hostname PC3
+	hostname Agent31
 	!
 	interface eth0
 	 ip address 10.0.6.10/24
@@ -160,13 +185,33 @@ node n7 {
     iconcoords {472.0 616.0}
     labelcoords {472.0 648.0}
     interface-peer {eth0 n3}
+    custom-config {
+	custom-config-id service:UserDefined
+	custom-command UserDefined
+	config {
+	files=('preenche_resolvconf.sh', )
+	cmdup=('mkdir -p /run/systemd/resolve', 'touch /run/systemd/resolve/stub-resolv.conf', 'sh preenche_resolvconf.sh', )
+	}
+    }
+    custom-config {
+	custom-config-id service:UserDefined:preenche_resolvconf.sh
+	custom-command preenche_resolvconf.sh
+	config {
+	preenche_resolvconf.sh
+	echo "# -- gerado pela script de arranque..." >> /etc/resolv.conf
+	echo "domain cc2024" >> /etc/resolv.conf
+	echo "nameserver 10.0.4.10" >> /etc/resolv.conf
+	echo "" >> /etc/resolv.conf 
+	}
+    }
+    services {DefaultRoute SSH UserDefined}
 }
 
 node n8 {
     type router
     model host
     network-config {
-	hostname PC4
+	hostname Agent4
 	!
 	interface eth0
 	 ip address 10.0.7.10/24
@@ -176,6 +221,63 @@ node n8 {
     iconcoords {43.0 332.0}
     labelcoords {43.0 364.0}
     interface-peer {eth0 n4}
+    custom-config {
+	custom-config-id service:UserDefined
+	custom-command UserDefined
+	config {
+	files=('preenche_resolvconf.sh', )
+	cmdup=('mkdir -p /run/systemd/resolve', 'touch /run/systemd/resolve/stub-resolv.conf', 'sh preenche_resolvconf.sh', )
+	}
+    }
+    custom-config {
+	custom-config-id service:UserDefined:preenche_resolvconf.sh
+	custom-command preenche_resolvconf.sh
+	config {
+	preenche_resolvconf.sh
+	echo "# -- gerado pela script de arranque..." >> /etc/resolv.conf
+	echo "domain cc2024" >> /etc/resolv.conf
+	echo "nameserver 10.0.4.10" >> /etc/resolv.conf
+	echo "" >> /etc/resolv.conf 
+	}
+    }
+    services {DefaultRoute SSH UserDefined}
+}
+
+node n9 {
+    type router
+    model host
+    network-config {
+	hostname Server
+	!
+	interface eth0
+	 ip address 10.0.8.10/24
+	 ipv6 address 2001:0::10/64
+	!
+    }
+    canvas c1
+    iconcoords {623.0 85.0}
+    labelcoords {623.0 117.0}
+    interface-peer {eth0 n1}
+    custom-config {
+	custom-config-id service:UserDefined
+	custom-command UserDefined
+	config {
+	files=('preenche_resolvconf.sh', )
+	cmdup=('mkdir -p /run/systemd/resolve', 'touch /run/systemd/resolve/stub-resolv.conf', 'sh preenche_resolvconf.sh', )
+	}
+    }
+    custom-config {
+	custom-config-id service:UserDefined:preenche_resolvconf.sh
+	custom-command preenche_resolvconf.sh
+	config {
+	preenche_resolvconf.sh
+	echo "# -- gerado pela script de arranque..." >> /etc/resolv.conf
+	echo "domain cc2024" >> /etc/resolv.conf
+	echo "nameserver 10.0.4.10" >> /etc/resolv.conf
+	echo "" >> /etc/resolv.conf 
+	}
+    }
+    services {DefaultRoute SSH UserDefined}
 }
 
 link l1 {
@@ -198,7 +300,6 @@ link l3 {
 }
 
 link l4 {
-    duplicate 10
     ber 10
     delay 20000
     nodes {n4 n1}
@@ -225,6 +326,11 @@ link l8 {
     bandwidth 10000000
 }
 
+link l9 {
+    nodes {n1 n9}
+    bandwidth 10000000
+}
+
 canvas c1 {
     name {Canvas1}
 }
@@ -232,7 +338,7 @@ canvas c1 {
 option global {
     interface_names no
     ip_addresses yes
-    ipv6_addresses yes
+    ipv6_addresses no
     node_labels yes
     link_labels yes
     show_api no
